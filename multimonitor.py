@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 import json
 import ctypes
 import ctypes.wintypes
@@ -220,7 +220,7 @@ class MultiMonitorApp:
         self.fullscreens[index] = not self.fullscreens[index]
 
     def add_url(self):
-        new_url = tk.simpledialog.askstring("Add URL", "Enter URL:")
+        new_url = simpledialog.askstring("Add URL", "Enter URL:")
         if new_url:
             self.urls.append(new_url)
             self.assignments.append("Monitor 1")
@@ -289,15 +289,15 @@ class MultiMonitorApp:
         import subprocess
         import tempfile
         from collections import defaultdict
-
         if not self.urls:
             messagebox.showwarning("No URLs", "Please add at least one URL.")
             return
 
         window_configs = []
-        tiling_map = defaultdict(list)
 
         if self.mode.get() == "list":
+            # Existing list mode logic
+            tiling_map = defaultdict(list)
             for i, url in enumerate(self.urls):
                 assigned = self.assignments[i]
                 if not assigned or not assigned.startswith("Monitor"):
@@ -321,26 +321,35 @@ class MultiMonitorApp:
                         "fullscreen": self.fullscreens[i]
                     })
         else:
+            # NEW: grid mode supports up to 4 windows per monitor (or as set in GUI)
             rows, cols = self.grid_rows.get(), self.grid_cols.get()
-            if rows * cols < len(self.urls):
-                messagebox.showerror("Grid Too Small", "Grid cells are fewer than URLs.")
-                return
-            screen = self.monitors[0]
-            cell_w = screen['width'] // cols
-            cell_h = screen['height'] // rows
+            max_cells = rows * cols
 
-            for i, url in enumerate(self.urls):
-                r = i // cols
-                c = i % cols
-                window_configs.append({
-                    "title": f"Grid {i+1}",
-                    "url": url,
-                    "x": screen['x'] + c * cell_w,
-                    "y": screen['y'] + r * cell_h,
-                    "width": cell_w,
-                    "height": cell_h,
-                    "fullscreen": self.fullscreens[i]
-                })
+            monitor_map = defaultdict(list)
+            for i, assigned in enumerate(self.assignments):
+                if assigned and assigned.startswith("Monitor"):
+                    mon_index = int(assigned.split(" ")[1]) - 1
+                    monitor_map[mon_index].append(i)
+
+            for mon_index, indices in monitor_map.items():
+                mon = self.monitors[mon_index]
+                cell_w = mon['width'] // cols
+                cell_h = mon['height'] // rows
+                for cell_idx, i in enumerate(indices):
+                    if cell_idx >= max_cells:
+                        messagebox.showerror("Grid Too Small", f"Monitor {mon_index+1}: Too many URLs assigned for the selected grid size (max {max_cells}).")
+                        break  # Only up to grid size per monitor
+                    r = cell_idx // cols
+                    c = cell_idx % cols
+                    window_configs.append({
+                        "title": f"Grid {i+1}",
+                        "url": self.urls[i],
+                        "x": mon['x'] + c * cell_w,
+                        "y": mon['y'] + r * cell_h,
+                        "width": cell_w,
+                        "height": cell_h,
+                        "fullscreen": self.fullscreens[i]
+                    })
 
         with tempfile.NamedTemporaryFile(delete=False, suffix='.json', mode='w') as tf:
             json.dump({"windows": window_configs}, tf)
