@@ -176,7 +176,7 @@ class MultiMonitorApp:
 
         self.show_monitor_ids()
 
-def show_monitor_ids(self):
+    def show_monitor_ids(self):
         for idx, mon in enumerate(self.monitors):
             overlay = tk.Toplevel()
             overlay.overrideredirect(True)
@@ -192,7 +192,7 @@ def show_monitor_ids(self):
             label.pack(expand=True, fill="both")
             overlay.after(self.overlay_duration, overlay.destroy)
 
-def refresh_url_list(self):
+    def refresh_url_list(self):
         for widget in self.url_frame.winfo_children():
             widget.destroy()
 
@@ -212,14 +212,14 @@ def refresh_url_list(self):
             if i >= len(self.fullscreens):
                 self.fullscreens.append(self.fullscreen.get())
 
-def update_assignment(self, index, event):
+    def update_assignment(self, index, event):
         combo = event.widget
         self.assignments[index] = combo.get()
 
-def toggle_fullscreen(self, index):
+    def toggle_fullscreen(self, index):
         self.fullscreens[index] = not self.fullscreens[index]
 
-def add_url(self):
+    def add_url(self):
         new_url = tk.simpledialog.askstring("Add URL", "Enter URL:")
         if new_url:
             self.urls.append(new_url)
@@ -227,9 +227,7 @@ def add_url(self):
             self.fullscreens.append(self.fullscreen.get())
             self.refresh_url_list()
 
-                
-
-def del_url(self):
+    def del_url(self):
         if not self.urls:
             return
         index = len(self.urls) - 1
@@ -238,7 +236,7 @@ def del_url(self):
         self.fullscreens.pop(index)
         self.refresh_url_list()
 
-def save_config(self):
+    def save_config(self):
         config = {
             "urls": self.urls,
             "assignments": self.assignments,
@@ -263,7 +261,7 @@ def save_config(self):
             with open(file_path, 'w') as f:
                 json.dump(config, f, indent=2)
 
-def load_config(self):
+    def load_config(self):
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if file_path:
             with open(file_path, 'r') as f:
@@ -287,7 +285,7 @@ def load_config(self):
 
                 self.refresh_url_list()
 
-def launch_windows(self):
+    def launch_windows(self):
         import subprocess
         import tempfile
         from collections import defaultdict
@@ -349,6 +347,7 @@ def launch_windows(self):
             tf.flush()
             import threading
             threading.Thread(target=lambda: subprocess.Popen(["python", "launch_windows_runner.py", tf.name]), daemon=True).start()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
