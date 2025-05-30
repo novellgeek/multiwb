@@ -1,6 +1,5 @@
 import sys
 import json
-import threading
 from PyQt5 import QtWidgets, QtCore, QtWebEngineWidgets
 
 class WebWindow(QtWidgets.QWidget):
@@ -18,7 +17,6 @@ class WebWindow(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         self.webview = QtWebEngineWidgets.QWebEngineView(self)
         self.webview.setUrl(QtCore.QUrl(config["url"]))
-        # Zoom
         self.webview.setZoomFactor(config.get("zoom", 1.0))
         layout.addWidget(self.webview)
 
