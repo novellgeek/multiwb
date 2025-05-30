@@ -88,15 +88,38 @@ class MultiMonitorApp:
         load_btn = ttk.Button(frame, text="Load Config", command=self.load_config)
         load_btn.grid(row=2, column=6, sticky="we")
 
+        # Global layout preset
+        global_layout_frame = ttk.LabelFrame(frame, text="Global Layout Preset")
+        global_layout_frame.grid(row=3, column=0, columnspan=7, sticky="we", pady=5)
+        global_layout_combo = ttk.Combobox(global_layout_frame, values=[
+            "None", "1 Vertical, 2 Horizontal"
+        ], state="readonly")
+        global_layout_combo.set("None")
+        global_layout_combo.grid(row=0, column=0, padx=2)
+        def apply_global_layout(event=None):
+            layout = global_layout_combo.get()
+            if layout == "1 Vertical, 2 Horizontal":
+                for i in range(len(self.monitors)):
+                    if i == 0:
+                        self.monitor_presets[i].set("Vertical")
+                        self.monitor_grids[i][0].set(2)
+                        self.monitor_grids[i][1].set(1)
+                    else:
+                        self.monitor_presets[i].set("Horizontal")
+                        self.monitor_grids[i][0].set(1)
+                        self.monitor_grids[i][1].set(2)
+                self.refresh_url_list()
+        global_layout_combo.bind("<<ComboboxSelected>>", apply_global_layout)
+
         # Mode
         mode_frame = ttk.LabelFrame(frame, text="Mode")
-        mode_frame.grid(row=3, column=0, columnspan=6, pady=5, sticky="we")
+        mode_frame.grid(row=4, column=0, columnspan=6, pady=5, sticky="we")
         ttk.Radiobutton(mode_frame, text="List Mode", variable=self.mode, value="list").pack(anchor="w")
         ttk.Radiobutton(mode_frame, text="Grid Mode", variable=self.mode, value="grid").pack(anchor="w")
 
         # Per-monitor grid controls and preset per monitor
         grid_settings_frame = ttk.LabelFrame(frame, text="Per-Monitor Grid Settings")
-        grid_settings_frame.grid(row=4, column=0, columnspan=7, sticky="we", pady=5)
+        grid_settings_frame.grid(row=5, column=0, columnspan=7, sticky="we", pady=5)
         for i, mon in enumerate(self.monitors):
             ttk.Label(grid_settings_frame, text=f"Monitor {i+1}").grid(row=i, column=0, padx=2)
             ttk.Label(grid_settings_frame, text="Rows:").grid(row=i, column=1)
@@ -110,7 +133,7 @@ class MultiMonitorApp:
             preset_combo.set("Custom")
             preset_combo.bind("<<ComboboxSelected>>", lambda e, idx=i: self.apply_monitor_preset(idx))
 
-        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=5, column=0, sticky="w")
+        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=6, column=0, sticky="w")
 
         self.refresh_url_list()
 
