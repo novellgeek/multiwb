@@ -17,13 +17,20 @@ class WebWindow(QtWidgets.QWidget):
             self.showFullScreen()
         layout = QtWidgets.QVBoxLayout(self)
         
-        # Add a close button (top-right)
+        # Funky close button (top-right)
         close_btn = QtWidgets.QPushButton("✖")
-        close_btn.setFixedSize(30, 30)
-        close_btn.setStyleSheet("QPushButton { border: none; background: #eee; font-weight: bold; font-size: 16px; } QPushButton:hover { background: #fcc; }")
+        close_btn.setFixedSize(32, 32)
+        close_btn.setStyleSheet("""
+            QPushButton { 
+                border: none; 
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00ffff, stop:1 #ff00ff); 
+                font-weight: bold; font-size: 18px; color: #222244; border-radius: 16px;
+            }
+            QPushButton:hover { background: #FFFF00; color: #FF00FF; }
+        """)
         close_btn.clicked.connect(self.close)
         
-        # Top bar with close button aligned right
+        # Top bar layout
         top_bar = QtWidgets.QHBoxLayout()
         top_bar.addStretch()
         top_bar.addWidget(close_btn)
