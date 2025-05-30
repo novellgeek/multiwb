@@ -24,7 +24,7 @@ def set_funky_style(root):
     style.map('TButton', background=[('active', '#FF00FF')], foreground=[('active', '#FFFF00')])
     style.configure('TCheckbutton', background='#222244', foreground='#FFAA00', font=('Comic Sans MS', 11))
     style.configure('TLabelframe', background='#222244', foreground='#FFAA00', font=('Comic Sans MS', 12, 'bold'))
-    style.configure('TCombobox', fieldbackground='#222244', background='#00FFFF', foreground='#222244', font=('Comic Sans MS', 11))
+    #style.configure('TCombobox', fieldbackground='#222244', background='#00FFFF', foreground='#222244', font=('Comic Sans MS', 11))
     style.configure('TEntry', fieldbackground='#222244', background='#00FFFF', foreground='#222244')
 
 class MultiMonitorApp:
@@ -168,7 +168,6 @@ class MultiMonitorApp:
         for widget in self.url_frame.winfo_children():
             widget.destroy()
 
-        # Header row
         ttk.Label(self.url_frame, text="URL", style='TLabel').grid(row=0, column=0, sticky="w", padx=2)
         ttk.Label(self.url_frame, text="Monitor", style='TLabel').grid(row=0, column=1, padx=5)
         ttk.Label(self.url_frame, text="Fullscreen", style='TLabel').grid(row=0, column=2)
@@ -180,7 +179,7 @@ class MultiMonitorApp:
             url_lbl.grid(row=i+1, column=0, sticky="w", padx=2)
             url_lbl.bind("<Double-Button-1>", lambda e, idx=i: self.edit_url(idx))
 
-            # Monitor selection combobox (make sure assignments always long enough)
+            # Ensure assignments always long enough
             if i >= len(self.assignments):
                 self.assignments.append("Monitor 1")
             combo = ttk.Combobox(self.url_frame, values=[f"Monitor {j+1}" for j in range(len(self.monitors))], width=12)
@@ -211,15 +210,20 @@ class MultiMonitorApp:
             show_region = False
             if assigned_monitor and assigned_monitor.startswith("Monitor"):
                 m_idx = int(assigned_monitor.split(" ")[1]) - 1
-                preset = self.monitor_presets[m_idx].get()
-                if preset == "1V2H":
-                    show_region = True
+                if m_idx < len(self.monitors):
+                    preset = self.monitor_presets[m_idx].get()
+                    if preset == "1V2H":
+                        show_region = True
             region_options = ["Left", "Top Right", "Bottom Right"]
             if show_region:
-                region_var = tk.StringVar(value=self.url_regions.get(i, region_options[0]))
+                # Use a StringVar per-row and update region on selection
+                region_var = tk.StringVar()
+                region_var.set(self.url_regions.get(i, region_options[0]))
+                def region_callback(event, idx=i, var=region_var):
+                    self.url_regions[idx] = var.get()
                 region_combo = ttk.Combobox(self.url_frame, values=region_options, textvariable=region_var, width=12, state='readonly')
                 region_combo.grid(row=i+1, column=4)
-                region_combo.bind("<<ComboboxSelected>>", lambda e, idx=i, v=region_var: self.update_region(idx, v))
+                region_combo.bind("<<ComboboxSelected>>", region_callback)
                 self.url_regions[i] = region_var.get()
             else:
                 ttk.Label(self.url_frame, text="-").grid(row=i+1, column=4)
