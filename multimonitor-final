@@ -92,7 +92,7 @@ class MultiMonitorApp:
 
         add_url_btn = ttk.Button(frame, text="➕ Add URL", command=self.add_url)
         add_url_btn.grid(row=2, column=0, sticky="we", pady=4)
-        del_url_btn = ttk.Button(frame, text="➖ Delete Selected", command=self.del_url)
+        del_url_btn = ttk.Button(frame, text="➖ Delete URL", command=self.del_url)
         del_url_btn.grid(row=2, column=1, sticky="we", pady=4)
         preview_btn = ttk.Button(frame, text="👁️ Preview Grid", command=self.show_preview)
         preview_btn.grid(row=2, column=2, sticky="we", pady=4)
@@ -180,13 +180,12 @@ class MultiMonitorApp:
             url_lbl.grid(row=i+1, column=0, sticky="w", padx=2)
             url_lbl.bind("<Double-Button-1>", lambda e, idx=i: self.edit_url(idx))
 
+            # Monitor selection combobox (make sure assignments always long enough)
+            if i >= len(self.assignments):
+                self.assignments.append("Monitor 1")
             combo = ttk.Combobox(self.url_frame, values=[f"Monitor {j+1}" for j in range(len(self.monitors))], width=12)
             combo.grid(row=i+1, column=1, padx=5)
-            if i < len(self.assignments):
-                combo.set(self.assignments[i])
-            else:
-                combo.set("")
-                self.assignments.append("")
+            combo.set(self.assignments[i])
             combo.bind("<<ComboboxSelected>>", lambda e, idx=i: self.update_assignment(idx, e))
 
             fs_chk = ttk.Checkbutton(self.url_frame, command=lambda idx=i: self.toggle_fullscreen(idx))
@@ -198,7 +197,6 @@ class MultiMonitorApp:
             else:
                 fs_chk.state(['!selected'])
 
-            ttk.Label(self.url_frame, text="Zoom:").grid(row=i+1, column=3, sticky="e")
             zoom_var = tk.DoubleVar(value=1.0 if i >= len(self.zoom_factors) else self.zoom_factors[i])
             zoom_entry = ttk.Entry(self.url_frame, textvariable=zoom_var, width=5)
             zoom_entry.grid(row=i+1, column=3, sticky="w")
