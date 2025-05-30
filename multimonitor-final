@@ -14,6 +14,18 @@ MONITOR_PRESETS = {
     "2x2 Grid": (2, 2),
 }
 
+def set_funky_style(root):
+    style = ttk.Style(root)
+    style.theme_use('clam')
+    style.configure('TFrame', background='#222244')
+    style.configure('TLabel', background='#222244', foreground='#00FFFF', font=('Comic Sans MS', 12, 'bold'))
+    style.configure('TButton', background='#00FFFF', foreground='#222244', font=('Comic Sans MS', 11, 'bold'))
+    style.map('TButton', background=[('active', '#FF00FF')], foreground=[('active', '#FFFF00')])
+    style.configure('TCheckbutton', background='#222244', foreground='#FFAA00', font=('Comic Sans MS', 11))
+    style.configure('TLabelframe', background='#222244', foreground='#FFAA00', font=('Comic Sans MS', 12, 'bold'))
+    style.configure('TCombobox', fieldbackground='#222244', background='#00FFFF', foreground='#222244', font=('Comic Sans MS', 11))
+    style.configure('TEntry', fieldbackground='#222244', background='#00FFFF', foreground='#222244')
+
 class MultiMonitorApp:
     def get_windows_monitors(self):
         monitors = []
@@ -46,7 +58,8 @@ class MultiMonitorApp:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("Multi-Monitor Web Launcher")
+        self.root.title("🦄 Funky Multi-Monitor Web Launcher 🦄")
+        set_funky_style(self.root)
 
         self.urls = []
         self.assignments = []
@@ -68,72 +81,46 @@ class MultiMonitorApp:
         frame.grid(row=0, column=0, sticky="nsew")
 
         url_label = ttk.Label(frame, text="URLs with Monitor Assignment:")
-        url_label.grid(row=0, column=0, columnspan=6, sticky="w")
+        url_label.grid(row=0, column=0, columnspan=7, sticky="w", pady=8)
 
         self.url_frame = ttk.Frame(frame)
-        self.url_frame.grid(row=1, column=0, columnspan=6, sticky="we")
+        self.url_frame.grid(row=1, column=0, columnspan=7, sticky="we")
 
-        add_url_btn = ttk.Button(frame, text="Add URL", command=self.add_url)
-        add_url_btn.grid(row=2, column=0, sticky="we")
-        del_url_btn = ttk.Button(frame, text="Delete Selected", command=self.del_url)
-        del_url_btn.grid(row=2, column=1, sticky="we")
-        preview_btn = ttk.Button(frame, text="Preview Grid", command=self.show_preview)
-        preview_btn.grid(row=2, column=2, sticky="we")
-        show_ids_btn = ttk.Button(frame, text="Show Monitor IDs", command=self.show_monitor_ids)
-        show_ids_btn.grid(row=2, column=3, sticky="we")
-        launch_btn = ttk.Button(frame, text="Launch", command=self.launch_windows)
-        launch_btn.grid(row=2, column=4, sticky="we")
-        save_btn = ttk.Button(frame, text="Save Config", command=self.save_config)
-        save_btn.grid(row=2, column=5, sticky="we")
-        load_btn = ttk.Button(frame, text="Load Config", command=self.load_config)
-        load_btn.grid(row=2, column=6, sticky="we")
+        add_url_btn = ttk.Button(frame, text="➕ Add URL", command=self.add_url)
+        add_url_btn.grid(row=2, column=0, sticky="we", pady=4)
+        del_url_btn = ttk.Button(frame, text="➖ Delete Selected", command=self.del_url)
+        del_url_btn.grid(row=2, column=1, sticky="we", pady=4)
+        preview_btn = ttk.Button(frame, text="👁️ Preview Grid", command=self.show_preview)
+        preview_btn.grid(row=2, column=2, sticky="we", pady=4)
+        show_ids_btn = ttk.Button(frame, text="🖥️ Show Monitor IDs", command=self.show_monitor_ids)
+        show_ids_btn.grid(row=2, column=3, sticky="we", pady=4)
+        launch_btn = ttk.Button(frame, text="🚀 Launch", command=self.launch_windows)
+        launch_btn.grid(row=2, column=4, sticky="we", pady=4)
+        save_btn = ttk.Button(frame, text="💾 Save Config", command=self.save_config)
+        save_btn.grid(row=2, column=5, sticky="we", pady=4)
+        load_btn = ttk.Button(frame, text="📂 Load Config", command=self.load_config)
+        load_btn.grid(row=2, column=6, sticky="we", pady=4)
 
-        # Global layout preset
-        global_layout_frame = ttk.LabelFrame(frame, text="Global Layout Preset")
-        global_layout_frame.grid(row=3, column=0, columnspan=7, sticky="we", pady=5)
-        global_layout_combo = ttk.Combobox(global_layout_frame, values=[
-            "None", "1 Vertical, 2 Horizontal"
-        ], state="readonly")
-        global_layout_combo.set("None")
-        global_layout_combo.grid(row=0, column=0, padx=2)
-        def apply_global_layout(event=None):
-            layout = global_layout_combo.get()
-            if layout == "1 Vertical, 2 Horizontal":
-                for i in range(len(self.monitors)):
-                    if i == 0:
-                        self.monitor_presets[i].set("Vertical")
-                        self.monitor_grids[i][0].set(2)
-                        self.monitor_grids[i][1].set(1)
-                    else:
-                        self.monitor_presets[i].set("Horizontal")
-                        self.monitor_grids[i][0].set(1)
-                        self.monitor_grids[i][1].set(2)
-                self.refresh_url_list()
-        global_layout_combo.bind("<<ComboboxSelected>>", apply_global_layout)
+        mode_frame = ttk.LabelFrame(frame, text="Mode", padding=8)
+        mode_frame.grid(row=3, column=0, columnspan=7, pady=5, sticky="we")
+        ttk.Radiobutton(mode_frame, text="List Mode", variable=self.mode, value="list").pack(side="left", padx=10)
+        ttk.Radiobutton(mode_frame, text="Grid Mode", variable=self.mode, value="grid").pack(side="left", padx=10)
 
-        # Mode
-        mode_frame = ttk.LabelFrame(frame, text="Mode")
-        mode_frame.grid(row=4, column=0, columnspan=6, pady=5, sticky="we")
-        ttk.Radiobutton(mode_frame, text="List Mode", variable=self.mode, value="list").pack(anchor="w")
-        ttk.Radiobutton(mode_frame, text="Grid Mode", variable=self.mode, value="grid").pack(anchor="w")
-
-        # Per-monitor grid controls and preset per monitor
-        grid_settings_frame = ttk.LabelFrame(frame, text="Per-Monitor Grid Settings")
-        grid_settings_frame.grid(row=5, column=0, columnspan=7, sticky="we", pady=5)
+        grid_settings_frame = ttk.LabelFrame(frame, text="Per-Monitor Grid Settings", padding=10)
+        grid_settings_frame.grid(row=4, column=0, columnspan=7, sticky="we", pady=10)
         for i, mon in enumerate(self.monitors):
             ttk.Label(grid_settings_frame, text=f"Monitor {i+1}").grid(row=i, column=0, padx=2)
             ttk.Label(grid_settings_frame, text="Rows:").grid(row=i, column=1)
             ttk.Entry(grid_settings_frame, textvariable=self.monitor_grids[i][0], width=5).grid(row=i, column=2)
             ttk.Label(grid_settings_frame, text="Cols:").grid(row=i, column=3)
             ttk.Entry(grid_settings_frame, textvariable=self.monitor_grids[i][1], width=5).grid(row=i, column=4)
-            # Per-monitor preset combobox
             preset_combo = ttk.Combobox(grid_settings_frame, values=list(MONITOR_PRESETS.keys()),
                                         textvariable=self.monitor_presets[i], width=10, state="readonly")
             preset_combo.grid(row=i, column=5, padx=2)
             preset_combo.set("Custom")
             preset_combo.bind("<<ComboboxSelected>>", lambda e, idx=i: self.apply_monitor_preset(idx))
 
-        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=6, column=0, sticky="w")
+        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=5, column=0, sticky="w")
 
         self.refresh_url_list()
 
@@ -147,13 +134,14 @@ class MultiMonitorApp:
     def show_preview(self):
         preview = tk.Toplevel(self.root)
         preview.title("Monitor Assignment Preview")
+        set_funky_style(preview)
         for idx, mon in enumerate(self.monitors):
             label = f"Monitor {idx+1}"
             assigned_urls = [self.urls[i] for i, a in enumerate(self.assignments) if a == label]
             text = "\n".join(assigned_urls) if assigned_urls else "(None)"
             frame = ttk.LabelFrame(preview, text=label, padding=10)
             frame.grid(row=idx // 2, column=idx % 2, padx=10, pady=10, sticky="nsew")
-            label_widget = tk.Label(frame, text=text, justify="left")
+            label_widget = ttk.Label(frame, text=text, justify="left")
             label_widget.pack()
 
     def show_monitor_ids(self):
@@ -165,9 +153,9 @@ class MultiMonitorApp:
             label = tk.Label(
                 overlay,
                 text=f"Monitor {idx+1}",
-                font=("Arial", 18, "bold"),
-                bg="#222222",
-                fg="#ffffff"
+                font=("Comic Sans MS", 24, "bold"),
+                bg="#222244",
+                fg="#FFFF00"
             )
             label.pack(expand=True, fill="both")
             overlay.after(2000, overlay.destroy)
@@ -177,11 +165,11 @@ class MultiMonitorApp:
             widget.destroy()
 
         for i, url in enumerate(self.urls):
-            url_lbl = tk.Label(self.url_frame, text=url, fg="blue", cursor="hand2")
-            url_lbl.grid(row=i, column=0, sticky="w")
+            url_lbl = ttk.Label(self.url_frame, text=url, style='TLabel')
+            url_lbl.grid(row=i, column=0, sticky="w", padx=2)
             url_lbl.bind("<Double-Button-1>", lambda e, idx=i: self.edit_url(idx))
 
-            combo = ttk.Combobox(self.url_frame, values=[f"Monitor {j+1}" for j in range(len(self.monitors))], width=15)
+            combo = ttk.Combobox(self.url_frame, values=[f"Monitor {j+1}" for j in range(len(self.monitors))], width=12)
             combo.grid(row=i, column=1, padx=5)
             if i < len(self.assignments):
                 combo.set(self.assignments[i])
@@ -195,7 +183,6 @@ class MultiMonitorApp:
             if i >= len(self.fullscreens):
                 self.fullscreens.append(self.fullscreen.get())
 
-            # Zoom factor
             ttk.Label(self.url_frame, text="Zoom:").grid(row=i, column=3)
             zoom_var = tk.DoubleVar(value=1.0 if i >= len(self.zoom_factors) else self.zoom_factors[i])
             zoom_entry = ttk.Entry(self.url_frame, textvariable=zoom_var, width=5)
@@ -281,7 +268,6 @@ class MultiMonitorApp:
                         rows, cols = monitor_grids[str(i)]
                         self.monitor_grids[i][0].set(rows)
                         self.monitor_grids[i][1].set(cols)
-                # Restore monitor presets
                 monitor_presets = config.get("monitor_presets", {})
                 for i in range(len(self.monitors)):
                     if str(i) in monitor_presets:
@@ -357,5 +343,6 @@ class MultiMonitorApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    set_funky_style(root)
     app = MultiMonitorApp(root)
     root.mainloop()
