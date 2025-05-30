@@ -1,0 +1,37 @@
+import sys
+import json
+import threading
+from PyQt5 import QtWidgets, QtCore, QtWebEngineWidgets
+
+class WebWindow(QtWidgets.QWidget):
+    def __init__(self, config):
+        super().__init__()
+        self.setWindowTitle(config.get("title", "WebView"))
+        self.setGeometry(
+            config.get("x", 100),
+            config.get("y", 100),
+            config.get("width", 800),
+            config.get("height", 600),
+        )
+        if config.get("fullscreen", False):
+            self.showFullScreen()
+        layout = QtWidgets.QVBoxLayout(self)
+        self.webview = QtWebEngineWidgets.QWebEngineView(self)
+        self.webview.setUrl(QtCore.QUrl(config["url"]))
+        # Zoom
+        self.webview.setZoomFactor(config.get("zoom", 1.0))
+        layout.addWidget(self.webview)
+
+def launch_windows(config_path):
+    with open(config_path, "r") as f:
+        config = json.load(f)
+    app = QtWidgets.QApplication(sys.argv)
+    windows = []
+    for win_cfg in config.get("windows", []):
+        win = WebWindow(win_cfg)
+        win.show()
+        windows.append(win)
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    launch_windows(sys.argv[1])
