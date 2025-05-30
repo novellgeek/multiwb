@@ -7,6 +7,13 @@ import subprocess
 import tempfile
 from collections import defaultdict
 
+MONITOR_PRESETS = {
+    "Custom": (None, None),
+    "Vertical": (2, 1),
+    "Horizontal": (1, 2),
+    "2x2 Grid": (2, 2),
+}
+
 class MultiMonitorApp:
     def get_windows_monitors(self):
         monitors = []
@@ -49,10 +56,10 @@ class MultiMonitorApp:
 
         self.mode = tk.StringVar(value="list")
         self.fullscreen = tk.BooleanVar(value=False)
-        self.layout_preset = tk.StringVar(value="Custom")
 
-        # Per-monitor grid settings
+        # Per-monitor grid settings and presets
         self.monitor_grids = {i: [tk.IntVar(value=2), tk.IntVar(value=2)] for i in range(len(self.monitors))}
+        self.monitor_presets = {i: tk.StringVar(value="Custom") for i in range(len(self.monitors))}
 
         self.build_gui()
 
@@ -61,10 +68,10 @@ class MultiMonitorApp:
         frame.grid(row=0, column=0, sticky="nsew")
 
         url_label = ttk.Label(frame, text="URLs with Monitor Assignment:")
-        url_label.grid(row=0, column=0, columnspan=5, sticky="w")
+        url_label.grid(row=0, column=0, columnspan=6, sticky="w")
 
         self.url_frame = ttk.Frame(frame)
-        self.url_frame.grid(row=1, column=0, columnspan=5, sticky="we")
+        self.url_frame.grid(row=1, column=0, columnspan=6, sticky="we")
 
         add_url_btn = ttk.Button(frame, text="Add URL", command=self.add_url)
         add_url_btn.grid(row=2, column=0, sticky="we")
@@ -76,54 +83,43 @@ class MultiMonitorApp:
         show_ids_btn.grid(row=2, column=3, sticky="we")
         launch_btn = ttk.Button(frame, text="Launch", command=self.launch_windows)
         launch_btn.grid(row=2, column=4, sticky="we")
-
-        # Layout presets
-        preset_frame = ttk.LabelFrame(frame, text="Layout Presets")
-        preset_frame.grid(row=3, column=0, columnspan=5, pady=5, sticky="we")
-        presets = ["Custom", "All Vertical (1 col)", "All Horizontal (1 row)", "1 Vertical + 2 Horizontal"]
-        preset_combo = ttk.Combobox(preset_frame, values=presets, textvariable=self.layout_preset)
-        preset_combo.grid(row=0, column=0, padx=5)
-        preset_combo.bind("<<ComboboxSelected>>", self.apply_layout_preset)
+        save_btn = ttk.Button(frame, text="Save Config", command=self.save_config)
+        save_btn.grid(row=2, column=5, sticky="we")
+        load_btn = ttk.Button(frame, text="Load Config", command=self.load_config)
+        load_btn.grid(row=2, column=6, sticky="we")
 
         # Mode
         mode_frame = ttk.LabelFrame(frame, text="Mode")
-        mode_frame.grid(row=4, column=0, columnspan=5, pady=5, sticky="we")
+        mode_frame.grid(row=3, column=0, columnspan=6, pady=5, sticky="we")
         ttk.Radiobutton(mode_frame, text="List Mode", variable=self.mode, value="list").pack(anchor="w")
         ttk.Radiobutton(mode_frame, text="Grid Mode", variable=self.mode, value="grid").pack(anchor="w")
 
-        # Per-monitor grid controls
+        # Per-monitor grid controls and preset per monitor
         grid_settings_frame = ttk.LabelFrame(frame, text="Per-Monitor Grid Settings")
-        grid_settings_frame.grid(row=5, column=0, columnspan=5, sticky="we", pady=5)
+        grid_settings_frame.grid(row=4, column=0, columnspan=7, sticky="we", pady=5)
         for i, mon in enumerate(self.monitors):
             ttk.Label(grid_settings_frame, text=f"Monitor {i+1}").grid(row=i, column=0, padx=2)
             ttk.Label(grid_settings_frame, text="Rows:").grid(row=i, column=1)
             ttk.Entry(grid_settings_frame, textvariable=self.monitor_grids[i][0], width=5).grid(row=i, column=2)
             ttk.Label(grid_settings_frame, text="Cols:").grid(row=i, column=3)
             ttk.Entry(grid_settings_frame, textvariable=self.monitor_grids[i][1], width=5).grid(row=i, column=4)
+            # Per-monitor preset combobox
+            preset_combo = ttk.Combobox(grid_settings_frame, values=list(MONITOR_PRESETS.keys()),
+                                        textvariable=self.monitor_presets[i], width=10, state="readonly")
+            preset_combo.grid(row=i, column=5, padx=2)
+            preset_combo.set("Custom")
+            preset_combo.bind("<<ComboboxSelected>>", lambda e, idx=i: self.apply_monitor_preset(idx))
 
-        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=6, column=0, sticky="w")
+        ttk.Checkbutton(frame, text="Default Fullscreen", variable=self.fullscreen).grid(row=5, column=0, sticky="w")
 
         self.refresh_url_list()
 
-    def apply_layout_preset(self, event=None):
-        preset = self.layout_preset.get()
-        if preset == "All Vertical (1 col)":
-            for i in self.monitor_grids:
-                self.monitor_grids[i][0].set(1)
-                self.monitor_grids[i][1].set(1)
-        elif preset == "All Horizontal (1 row)":
-            for i in self.monitor_grids:
-                self.monitor_grids[i][0].set(1)
-                self.monitor_grids[i][1].set(2)
-        elif preset == "1 Vertical + 2 Horizontal":
-            for i in self.monitor_grids:
-                if i == 0:
-                    self.monitor_grids[i][0].set(2)
-                    self.monitor_grids[i][1].set(1)
-                else:
-                    self.monitor_grids[i][0].set(1)
-                    self.monitor_grids[i][1].set(2)
-        # Custom: do nothing
+    def apply_monitor_preset(self, idx):
+        preset = self.monitor_presets[idx].get()
+        rows, cols = MONITOR_PRESETS[preset]
+        if rows is not None and cols is not None:
+            self.monitor_grids[idx][0].set(rows)
+            self.monitor_grids[idx][1].set(cols)
 
     def show_preview(self):
         preview = tk.Toplevel(self.root)
@@ -237,7 +233,8 @@ class MultiMonitorApp:
             "monitor_grids": {
                 str(i): [var[0].get(), var[1].get()]
                 for i, var in self.monitor_grids.items()
-            }
+            },
+            "monitor_presets": {str(i): self.monitor_presets[i].get() for i in self.monitor_presets},
         }
         file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
         if file_path:
@@ -261,6 +258,11 @@ class MultiMonitorApp:
                         rows, cols = monitor_grids[str(i)]
                         self.monitor_grids[i][0].set(rows)
                         self.monitor_grids[i][1].set(cols)
+                # Restore monitor presets
+                monitor_presets = config.get("monitor_presets", {})
+                for i in range(len(self.monitors)):
+                    if str(i) in monitor_presets:
+                        self.monitor_presets[i].set(monitor_presets[str(i)])
                 self.refresh_url_list()
 
     def launch_windows(self):
