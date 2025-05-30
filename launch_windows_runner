@@ -1,6 +1,7 @@
 import sys
 import json
-from PyQt5 import QtWidgets, QtCore, QtWebEngineWidgets
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 class WebWindow(QtWidgets.QWidget):
     def __init__(self, config):
@@ -15,9 +16,23 @@ class WebWindow(QtWidgets.QWidget):
         if config.get("fullscreen", False):
             self.showFullScreen()
         layout = QtWidgets.QVBoxLayout(self)
-        self.webview = QtWebEngineWidgets.QWebEngineView(self)
+        
+        # Add a close button (top-right)
+        close_btn = QtWidgets.QPushButton("✖")
+        close_btn.setFixedSize(30, 30)
+        close_btn.setStyleSheet("QPushButton { border: none; background: #eee; font-weight: bold; font-size: 16px; } QPushButton:hover { background: #fcc; }")
+        close_btn.clicked.connect(self.close)
+        
+        # Top bar with close button aligned right
+        top_bar = QtWidgets.QHBoxLayout()
+        top_bar.addStretch()
+        top_bar.addWidget(close_btn)
+        
+        self.webview = QWebEngineView(self)
         self.webview.setUrl(QtCore.QUrl(config["url"]))
         self.webview.setZoomFactor(config.get("zoom", 1.0))
+        
+        layout.addLayout(top_bar)
         layout.addWidget(self.webview)
 
 def launch_windows(config_path):
